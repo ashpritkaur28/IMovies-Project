@@ -1,45 +1,65 @@
-# iMovies MVP
+# iMovies — Movie Ticket Booking Platform
 
-A React + Vite frontend and Express + MongoDB backend for a movie ticket booking MVP.
+iMovies is a full-stack movie ticket booking platform designed to simplify movie discovery, showtime selection, seat booking, and theatre management. It features a cinema-inspired interface and a role-based admin dashboard for managing movies, theatres, and bookings.
 
-## Requirements
-- Node.js 18+
-- MongoDB running locally or a MongoDB Atlas URI
+## Tech Stack
 
-## 1. Start MongoDB
-Make sure your local MongoDB service is running. Default URI: `mongodb://127.0.0.1:27017/Imovies`.
+**Frontend**
+- React.js
+- Vite
+- CSS
 
-## 2. Configure and start the backend
-```bash
-cd server
-npm install
+**Backend**
+- Node.js
+- Express.js
+
+**Database**
+- MongoDB
+- Mongoose
+
+**Authentication & Security**
+- JSON Web Tokens (JWT)
+- bcrypt password hashing
+- Role-based access control
+
+**Tools**
+- Git
+- GitHub
+- npm
+
+## Features
+
+- **User Authentication:** User registration and login with hashed passwords and JWT-based authentication.
+- **Movie Discovery:** Browse movies and view movie details.
+- **Showtime Management:** Retrieve available shows for movies.
+- **Interactive Seat Booking:** Select seats and maintain booking and seat availability records.
+- **Booking History:** View personal bookings.
+- **Admin Dashboard:** Manage movies, theatres, and bookings.
+- **Theatre Management:** Add theatres and manage approval status.
+- **Role-Based Access:** Separate permissions for customers, cinema owners, and platform administrators.
+- **Responsive UI:** Dark, cinema-inspired interface for a modern movie-booking experience.
+
+## Project Structure
+
+```text
+IMovies/
+├── client/
+│   └── src/
+│       ├── App.jsx
+│       ├── main.jsx
+│       └── style.css
+├── server/
+│   ├── middleware/
+│   ├── models/
+│   ├── routes/
+│   ├── scripts/
+│   ├── server.js
+│   └── seed.js
+├── .gitignore
+├── package-lock.json
+└── README.md
 ```
-Copy `.env.example` to `.env`, then set `JWT_SECRET` to a long random secret. Keep `.env` private.
 
-Seed demo movies and showtimes:
-```bash
-npm run seed
-```
-Then start the API:
-```bash
-npm run dev
-```
-API health check: http://localhost:8000/api/health
+## Repository
 
-## 3. Start the frontend (new terminal)
-```bash
-cd client
-npm install
-npm run dev
-```
-Open http://localhost:5173
-
-## Included MVP features
-- Register/login with bcrypt password hashing and JWT authentication
-- Movie browsing and search
-- Demo showtimes and seat layout
-- Booking creation and booked-seat persistence in MongoDB
-- Booking history
-- Responsive dark cinema-inspired UI
-
-
+GitHub: [atharvshukla24/IMovies](https://github.com/atharvshukla24/IMovies)
