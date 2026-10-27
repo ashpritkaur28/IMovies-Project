@@ -12,9 +12,14 @@ const adminRoutes = require('./routes/admin');
 const theatreRoutes = require('./routes/theatres');
 const app = express();
 
+
 app.use(cors({
-  origin: process.env.CLIENT_ORIGIN || 'http://localhost:5173'
+  origin: [
+    'http://localhost:5173',
+    'https://i-movies-nine-ruby.vercel.app'
+  ]
 }));
+
 
 app.use(express.json());
 
