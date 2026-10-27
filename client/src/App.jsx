@@ -233,22 +233,47 @@ function ShowRow({ show, user }) {
   const [selected, setSelected] = useState([]);
   const [message, setMessage] = useState('');
   const [busy, setBusy] = useState(false);
+  const [paymentStep, setPaymentStep] = useState('seats');
   const seats = show.seats || [];
+  const total = selected.length * Number(show.price || 0);
+
+  const startPayment = () => {
+    if (!user) { setMessage('Please sign in to continue.'); return; }
+    if (!selected.length) { setMessage('Choose at least one seat.'); return; }
+    setMessage('');
+    setPaymentStep('checkout');
+  };
+
+  const payNow = () => {
+    setBusy(true);
+    setMessage('');
+    // Payment is simulated for this project; no payment provider is contacted.
+    window.setTimeout(() => {
+      setPaymentStep('paid');
+      setBusy(false);
+    }, 700);
+  };
 
   const book = async () => {
-    if (!user) { setMessage('Sign in to book seats.'); return; }
-    if (!selected.length) { setMessage('Choose at least one seat.'); return; }
+    if (!user) { setMessage('Please sign in to continue.'); return; }
+    if (paymentStep !== 'paid') { setMessage('Complete payment before confirming your booking.'); return; }
     setBusy(true); setMessage('');
     try {
       await http.post('/bookings', { showId: show._id, seats: selected });
-      setMessage('Booking confirmed! Demo payment recorded — no real money was charged.');
+      setMessage('Booking confirmed successfully.');
       setSelected([]);
+      setPaymentStep('seats');
       const r = await http.get(`/movies/${show.movie?._id || show.movie}/shows`);
       const updated = r.data.find(s => s._id === show._id);
       if (updated) show.seats = updated.seats;
     } catch (e) {
-      setMessage(e.response?.data?.message || 'Booking failed. Try again.');
+      setMessage(e.response?.data?.message || 'Booking failed. Please try again.');
     } finally { setBusy(false); }
+  };
+
+  const resetPayment = () => {
+    setPaymentStep('seats');
+    setMessage('');
   };
 
   return (
@@ -258,19 +283,53 @@ function ShowRow({ show, user }) {
         <div className="show-theatre"><MapPin size={15} />{show.theatreName} · {show.location}</div>
       </div>
       <div className="show-price">₹{show.price}<small>per seat</small></div>
-      <button className="btn btn-primary" onClick={() => setOpen(!open)}>{open ? 'Hide seats' : 'Select seats'} <ArrowRight size={15} /></button>
+      <button className="btn btn-primary" onClick={() => { setOpen(!open); setMessage(''); }}>{open ? 'Hide seats' : 'Select seats'} <ArrowRight size={15} /></button>
       {open && <div className="seat-picker">
-        <div className="screen-line">SCREEN</div>
-        <div className="seat-grid">{seats.map(s =>
-          <button key={s.seatNo} disabled={s.status === 'booked'} className={`seat ${s.status === 'booked' ? 'booked' : ''} ${selected.includes(s.seatNo) ? 'selected' : ''}`} onClick={() => setSelected(old => old.includes(s.seatNo) ? old.filter(x => x !== s.seatNo) : [...old, s.seatNo])}>
-            <Armchair size={14} />{s.seatNo}
-          </button>
-        )}</div>
-        <div className="seat-legend"><span><i /> Available</span><span><i className="sel" /> Selected</span><span><i className="taken" /> Booked</span></div>
-        <div className="booking-action">
-          <span>{selected.length} seat(s) · <b>₹{selected.length * show.price}</b></span>
-          <button className="btn btn-primary" disabled={busy} onClick={book}>{busy ? 'Booking…' : 'Confirm booking'}</button>
-        </div>
+        {paymentStep === 'seats' && <>
+          <div className="screen-line">SCREEN</div>
+          <div className="seat-grid">{seats.map(s =>
+            <button key={s.seatNo} disabled={s.status === 'booked'} className={`seat ${s.status === 'booked' ? 'booked' : ''} ${selected.includes(s.seatNo) ? 'selected' : ''}`} onClick={() => setSelected(old => old.includes(s.seatNo) ? old.filter(x => x !== s.seatNo) : [...old, s.seatNo])}>
+              <Armchair size={14} />{s.seatNo}
+            </button>
+          )}</div>
+          <div className="seat-legend"><span><i /> Available</span><span><i className="sel" /> Selected</span><span><i className="taken" /> Booked</span></div>
+          <div className="booking-action">
+            <span>{selected.length} seat(s) · <b>₹{total}</b></span>
+            <button className="btn btn-primary" disabled={busy} onClick={startPayment}>Continue to payment <ArrowRight size={15} /></button>
+          </div>
+        </>}
+
+        {paymentStep === 'checkout' && <div style={{ background: '#11111a', border: '1px solid #303044', borderRadius: 14, padding: 20, marginTop: 12, color: '#f5f5fb' }}>
+          <button className="btn btn-outline" onClick={resetPayment} style={{ marginBottom: 16 }}>← Back to seats</button>
+          <div className="eyebrow">SECURE CHECKOUT</div>
+          <h2 style={{ margin: '8px 0' }}>Pay with UPI</h2>
+          <p style={{ color: '#b9b9c9', marginTop: 0 }}>Scan the code shown in your payment app or use the UPI ID below.</p>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit,minmax(180px,1fr))', gap: 20, alignItems: 'center' }}>
+            <div style={{ background: '#fff', padding: 12, borderRadius: 12, width: 164, height: 164, boxSizing: 'border-box', display: 'grid', gridTemplateColumns: 'repeat(11,1fr)', gridTemplateRows: 'repeat(11,1fr)', gap: 2, margin: '0 auto' }}>
+              {Array.from({ length: 121 }, (_, i) => {
+                const x = i % 11, y = Math.floor(i / 11);
+                const finder = (x < 3 && y < 3) || (x > 7 && y < 3) || (x < 3 && y > 7);
+                const dark = finder ? (x === 0 || x === 2 || y === 0 || y === 2 || (x === 1 && y === 1) || (x === 8 && y === 1) || (x === 9 && y === 1) || (x === 8 && y === 2) || (x === 1 && y === 8) || (x === 1 && y === 9) || (x === 2 && y === 8)) : ((i * 7 + x * y + x + y) % 5 < 2);
+                return <span key={i} style={{ background: dark ? '#111' : '#fff', borderRadius: 1 }} />;
+              })}
+            </div>
+            <div>
+              <div style={{ color: '#b9b9c9', fontSize: 13 }}>UPI ID</div>
+              <div style={{ fontSize: 17, fontWeight: 700, margin: '5px 0 14px' }}>imovies.test@upi</div>
+              <div style={{ color: '#b9b9c9', fontSize: 13 }}>Amount to pay</div>
+              <div style={{ fontSize: 30, fontWeight: 800, margin: '5px 0 16px' }}>₹{total}</div>
+              <button className="btn btn-primary btn-large" disabled={busy} onClick={payNow}>{busy ? 'Processing…' : 'Pay Now'} <ArrowRight size={16} /></button>
+              <p style={{ fontSize: 11, color: '#8f8fa3', marginBottom: 0 }}>No money is transferred from this screen.</p>
+            </div>
+          </div>
+        </div>}
+
+        {paymentStep === 'paid' && <div style={{ background: '#11111a', border: '1px solid #285d47', borderRadius: 14, padding: 20, marginTop: 12, color: '#f5f5fb' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#67d6a0' }}><CheckCircle2 size={28} /><h2 style={{ margin: 0 }}>Payment Successful</h2></div>
+          <p style={{ color: '#c4c4d2' }}>Amount: <b>₹{total}</b> · Seats: <b>{selected.join(', ')}</b></p>
+          <p style={{ color: '#9b9bad', fontSize: 12 }}>Payment status is simulated for this project. No money was transferred.</p>
+          <button className="btn btn-primary btn-large" disabled={busy} onClick={book}>{busy ? 'Confirming…' : 'Confirm Booking'} <CheckCircle2 size={16} /></button>
+        </div>}
         {message && <div className={message.startsWith('Booking confirmed') ? 'success-banner' : 'error-banner'}>{message}</div>}
       </div>}
     </div>
@@ -281,11 +340,16 @@ function Auth({ mode, onSuccess }) {
   const [form, setForm] = useState({ name: '', email: '', password: '' });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [adminMode, setAdminMode] = useState(false);
 
   const submit = async e => {
     e.preventDefault(); setError(''); setBusy(true);
     try {
       const { data } = await http.post(`/auth/${mode}`, form);
+      if (adminMode && data.user?.role !== 'platform_admin') {
+        setError('This account does not have administrator access.');
+        return;
+      }
       onSuccess(data);
     } catch (e) {
       setError(e.response?.data?.message || 'Could not connect to the server.');
@@ -296,15 +360,18 @@ function Auth({ mode, onSuccess }) {
     <main className="auth-page">
       <div className="auth-card">
         <div className="auth-symbol"><Film size={24} /></div>
-        <div className="eyebrow">YOUR MOVIE JOURNEY STARTS HERE</div>
-        <h1>{mode === 'login' ? 'Welcome back.' : 'Join the show.'}</h1>
-        <p>{mode === 'login' ? 'Sign in and get back to the good stuff.' : 'Create an account to book your next movie night.'}</p>
+        <div className="eyebrow">{adminMode ? 'ADMINISTRATOR ACCESS' : 'YOUR MOVIE JOURNEY STARTS HERE'}</div>
+        <h1>{mode === 'login' ? (adminMode ? 'Admin sign in.' : 'Welcome back.') : 'Join the show.'}</h1>
+        <p>{mode === 'login' ? (adminMode ? 'Sign in with your administrator account.' : 'Sign in and get back to the good stuff.') : 'Create an account to book your next movie night.'}</p>
+        {mode === 'login' && <button type="button" className="btn btn-outline btn-large full" style={{ marginBottom: 16 }} onClick={() => { setAdminMode(v => !v); setError(''); }}>
+          <LayoutDashboard size={17} /> {adminMode ? 'Sign in as Customer' : 'Login as Admin'}
+        </button>}
         <form onSubmit={submit}>
           {mode === 'register' && <label>Full name<input required minLength="2" value={form.name} onChange={e => setForm({ ...form, name: e.target.value })} placeholder="Your name" /></label>}
           <label>Email address<input required type="email" value={form.email} onChange={e => setForm({ ...form, email: e.target.value })} placeholder="you@example.com" /></label>
-          <label>Password<input required minLength="8" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="At least 8 characters" /></label>
+          <label>Password<input required minLength="8" type="password" value={form.password} onChange={e => setForm({ ...form, password: e.target.value })} placeholder="Password" /></label>
           {error && <div className="error-banner">{error}</div>}
-          <button disabled={busy} className="btn btn-primary btn-large full">{busy ? 'Please wait…' : mode === 'login' ? 'Sign in' : 'Create account'} <ArrowRight size={16} /></button>
+          <button disabled={busy} className="btn btn-primary btn-large full">{busy ? 'Please wait…' : mode === 'login' ? (adminMode ? 'Admin sign in' : 'Sign in') : 'Create account'} <ArrowRight size={16} /></button>
         </form>
         <div className="auth-switch">{mode === 'login' ? <>New around here? <Link to="/register">Create an account</Link></> : <>Already a member? <Link to="/login">Sign in</Link></>}</div>
       </div>
