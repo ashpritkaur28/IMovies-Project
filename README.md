@@ -42,7 +42,4 @@ Open http://localhost:5173
 - Booking history
 - Responsive dark cinema-inspired UI
 
-## Important limitations
-- Payment is a clearly labelled demo flow (`demo-paid`); it does not charge money. Add a real gateway only with server-side order creation and signature verification.
-- This MVP does not include admin UI, email/SMS notifications, reviews, favorites, cancellation/refunds, or WebSocket live updates yet.
-- The booking route uses a MongoDB transaction to avoid simultaneous seat double-booking. MongoDB transactions require a replica set (MongoDB Atlas supports this; local standalone MongoDB does not). For local development, run MongoDB as a single-node replica set or replace the transaction with an atomic conditional update before relying on concurrent bookings.
+
