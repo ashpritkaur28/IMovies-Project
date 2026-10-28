@@ -67,7 +67,7 @@ GitHub: [ashpritkaur28/IMovies-Project](https://github.com/ashpritkaur28/IMovies
 ## Demo Video
 
 Watch the iMovies project demo:
-(https://drive.google.com/file/d/1N6e32oq2KZN6ZIdRvxvRzc4hY8Z9iY4B/view?usp=sharing))
+(https://drive.google.com/file/d/1N6e32oq2KZN6ZIdRvxvRzc4hY8Z9iY4B/view?usp=sharing)
 
 ## Live Demo
 [Open iMovies Website](https://i-movies-project-nu.vercel.app/)
