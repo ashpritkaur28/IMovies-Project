@@ -62,4 +62,4 @@ IMovies/
 
 ## Repository
 
-GitHub: [atharvshukla24/IMovies](https://github.com/atharvshukla24/IMovies)
+GitHub: [ashpritkaur28/IMovies-Project](https://github.com/ashpritkaur28/IMovies-Project)
